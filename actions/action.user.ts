@@ -1,0 +1,98 @@
+'use server'
+import { auth, currentUser } from '@clerk/nextjs/server'
+import {prisma} from '../lib/prisma'
+import { revalidatePath } from 'next/cache'
+
+
+export const syncUser = async()=>{
+    console.log('user syncing ..........................')
+    try {
+        const {userId}= await auth()
+        const user = await currentUser()
+        if(!userId && user) return
+
+        if(userId && user){
+            const existingUser = await prisma.user.findUnique({
+                where:{clerkId:userId}
+            })
+            if(existingUser) {
+                return existingUser
+            }
+
+            const dbUser =await prisma.user.create({
+            data:{
+                clerkId:userId,
+                name: `${user.firstName || ""} ${user.lastName || ""}`,
+                email: user.emailAddresses[0].emailAddress,
+            }
+            })
+            return dbUser
+        }
+
+    } catch (error) {
+
+        console.log('error',error)
+        
+    }
+}
+
+
+export const getLoggedInUser = async()=>{
+
+    try {
+        const {userId} = await auth()
+        if(userId){
+            const user = await prisma.user.findUnique({
+                where:{clerkId:userId}
+            })
+            return user
+
+        }
+        
+    } catch (error) {
+        console.log('error',error)
+    }
+}
+
+
+type updateUserData = {
+    name:string;
+    email:string
+}
+export const updateUser = async(userData:updateUserData)=>{
+    try {
+        const {userId} =await auth()
+        if(userId){
+            const response = await prisma.user.update({where:{clerkId:userId},data:{
+                name:userData.name,
+                email:userData.email
+            }})
+            revalidatePath('/profile')
+            return response
+        }
+       
+    } catch (error) {
+        console.log('error',error)
+    }
+
+}
+
+
+export const deleteUser = async()=>{
+    try {
+        const {userId} = await auth()
+        if(userId){
+            const response = await prisma.user.delete({where:{clerkId:userId}})
+            revalidatePath('/profile')
+            return response
+        }
+    } catch (error) {
+        console.log('error',error)
+        
+    }
+} 
+
+export const isAdmin = async()=>{
+    const user = await getLoggedInUser()
+    return user?.role==='ADMIN'
+}

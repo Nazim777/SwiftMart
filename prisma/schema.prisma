@@ -1,0 +1,164 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+model User {
+  id          String @id @default(cuid())
+  clerkId     String     @unique
+  role        Role       @default(USER)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  name        String
+  email       String     @unique
+  cart        Cart?
+  orders      Order[]
+  payments    Payment[]
+
+  @@map("users") 
+}
+
+enum Role{
+  ADMIN
+  USER
+}
+
+
+model Cart{
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  cartItems   CartItem[]
+
+  userId      String @unique
+  user        User  @relation(fields:[userId], references:[id], onDelete:Cascade)
+
+  @@map("carts")
+}
+
+
+model CartItem{
+  id          String @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  productId  String
+  quantity   Int
+
+  cartId     String
+  cart       Cart @relation(fields:[cartId], references:[id], onDelete:Cascade)
+
+  @@map("cart_items")
+
+}
+
+
+model Order{
+  id           String @id @default(cuid())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  status      Status
+  totalPrice  Float
+  discount    Float  @default(0)
+  tax         Float  @default(0)
+
+
+  orderItems  OrderItem[]
+
+  userId      String
+  user        User @relation(fields: [userId], references:[id], onDelete:Cascade)
+  payment     Payment?
+
+  @@map("orders")    
+}
+
+enum Status{
+  PENDING
+  CANCELED
+  COMPLETED
+}
+
+model OrderItem{
+  id         String @id @default(cuid())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  productId  String
+  quantity   Int
+
+  orderId   String
+  order     Order @relation(fields:[orderId], references:[id], onDelete:Cascade)
+
+
+  @@map("order_items")
+
+}
+
+
+model Product{
+  id           String  @id @default(cuid())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  name         String
+  url          String
+  description  String
+  price        Float
+  stock        Int
+
+  categories   CategoriesOnProducts[]
+
+  @@map("products")
+}
+
+
+model Category {
+  id       String  @id @default(cuid())
+  name     String
+  products CategoriesOnProducts[]
+}
+
+model CategoriesOnProducts {
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete:Cascade)
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete:Cascade)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@id([productId, categoryId])
+}
+
+
+model Payment{
+  id                       String  @id @default(cuid())
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+
+  stripePaymentId          String   @unique
+  amount                   Float
+  status                   PaymentStatus
+
+  userId                   String
+  user                     User @relation(fields:[userId], references:[id], onDelete:Cascade)
+  orderId                  String @unique
+  order                    Order @relation(fields:[orderId], references:[id], onDelete:Cascade)
+
+  @@map("payments")
+
+}
+
+
+enum PaymentStatus{
+  PENDING
+  SUCCESS
+  FAILED
+}
