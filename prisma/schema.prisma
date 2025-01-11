@@ -49,6 +49,7 @@ model CartItem{
   updatedAt   DateTime @updatedAt
 
   productId  String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   quantity   Int
 
   cartId     String
@@ -114,6 +115,7 @@ model Product{
   stock        Int
 
   categories   CategoriesOnProducts[]
+  cartItems   CartItem[] 
 
   @@map("products")
 }
