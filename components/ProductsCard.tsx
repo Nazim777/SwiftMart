@@ -8,27 +8,40 @@ import { ProductType } from "@/types/product";
 import Link from "next/link";
 import { addToCart } from "@/actions/action.cart";
 import { getLoggedInUser } from "@/actions/action.user";
-
+import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
+import { SignInButton, useUser } from "@clerk/nextjs";
 type productProps = {
   product: ProductType;
+  isInCart: boolean;
+  handleTriggerAddToCart: (text: boolean) => void;
 };
 
-const ProductsCard =  ({ product }: productProps) => {
+const ProductsCard = ({
+  product,
+  isInCart,
+  handleTriggerAddToCart,
+}: productProps) => {
+  const router = useRouter();
+  const { user } = useUser();
+
   const [loading, setLoading] = useState(false);
   const handleAddToCart = async (productId: string) => {
     setLoading(true);
-    const user = await getLoggedInUser()
-   if(user){
-    const response = await addToCart(user?.id,productId,1)
-    if(response.success){
-      console.log('response',response.cart)
+    const user = await getLoggedInUser();
+    if (user) {
+      const response = await addToCart(user?.id, productId, 1);
+      if (response.success) {
+        // console.log('response',response.cart)
+        handleTriggerAddToCart(true);
+        toast.success("product added to the cart...", { theme: "colored" });
+      }
     }
-   }
     try {
     } catch (error) {
-      console.log('error',error)
-    }finally{
-      setLoading(false)
+      console.log("error", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -60,13 +73,31 @@ const ProductsCard =  ({ product }: productProps) => {
             </Button>
           </Link>
           {product.stock > 0 && (
-            <Button
-              variant="default"
-              size="sm"
-              onClick={() => handleAddToCart(product.id)}
-            >
-             {loading?'Adding...':' Add to Cart'}
-            </Button>
+            <>
+              {!user ? (
+                <SignInButton mode="modal">
+                  <Button> Add To Cart</Button>
+                </SignInButton>
+              ) : (
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => {
+                    if (isInCart) {
+                      router.push("/cart");
+                    } else {
+                      handleAddToCart(product.id);
+                    }
+                  }}
+                >
+                  {loading
+                    ? "Adding"
+                    : isInCart
+                    ? "Already in Cart"
+                    : "Add to Cart"}
+                </Button>
+              )}
+            </>
           )}
         </div>
       </CardContent>

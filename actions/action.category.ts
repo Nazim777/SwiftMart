@@ -7,11 +7,6 @@ import { Prisma } from "@prisma/client"
 
 export const getAllCategories = async(page:number=1,limit:number=10,searchTerm:string="",sortOrder:'asc'|'desc'='asc')=>{
     try {
-        const admin = await isAdmin()
-        if(!admin){
-            throw new Error('Unauthorize')
-        }
-
         let whereCondition:any={}
         
         if(searchTerm){

@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect } from "react";
+import React, { useContext, useEffect } from "react";
 import { useState } from "react";
 import { Trash2, MinusCircle, PlusCircle } from "lucide-react";
 import {
@@ -15,16 +15,22 @@ import {
   getCartItem,
   updateCartItemQuatity,
 } from "@/actions/action.cart";
-import { cartItemType } from "@/types/cart";
 import ButtonLoader from "@/components/ButtonLoader";
 import CartPageSkeleton from "@/components/CartSkeletonLoader";
-
+import { ProductContext } from "@/context/Product.Context";
+import { toast } from "react-toastify";
+import { useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 const CartPage = () => {
-  // This would typically come from your database/backend
+  
+  const {user} = useUser()
+  const router = useRouter()
 
-  const [cartItem, setCartItem] = useState<cartItemType[] | undefined>(
-    undefined
-  );
+  if(!user){
+    router.push('/')
+  } 
+ 
+  const {cartItems:cartItem,setCartItems:setCartItem} = useContext(ProductContext)
   const [loading, setLoading] = useState(false);
   const [loadingItemId, setLoadingItemId] = useState<string | null>(null);
   const [change,setChange] = useState<number | null | string>(null)
@@ -53,7 +59,6 @@ const CartPage = () => {
     prevQuantity: number,
     delta: number
   ) => {
-    // setLoading(true);
     setLoadingItemId(id)
     setChange(delta)
     const newQuantity = prevQuantity + delta;
@@ -73,24 +78,22 @@ const CartPage = () => {
     } catch (error) {
       console.log("error", error);
     } finally {
-    //   setLoading(false);
       setLoadingItemId(null)
     }
   };
 
   const removeItem = async (id: string) => {
-    // setLoading(true);
     setLoadingItemId(id)
     setChange('delete')
     try {
       const response = await deleteCartItem(id);
       if (response.success) {
         setCartItem(cartItem?.filter((item) => item.id !== id));
+        toast.success('product removed from the cart....',{theme:'colored'})
       }
     } catch (error) {
       console.log("error", error);
     } finally {
-    //   setLoading(true);
       setLoadingItemId(null)
     }
   };
@@ -108,10 +111,23 @@ const CartPage = () => {
   };
 
 
+
+
+
+
+
+
+
+
+
+
+
   // Conditional rendering based on the loading state
   if (loading) {
      return <CartPageSkeleton />;
   }
+
+
 
 
 

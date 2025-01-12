@@ -1,6 +1,5 @@
 import React from 'react'
 import Sidebar from "../../components/Sidebar"
-
 const AdminDashboardLayout = ({ children }: { children: React.ReactNode }) => {
     return (
       <div className="flex h-screen mt-12">

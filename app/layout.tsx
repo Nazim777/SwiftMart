@@ -5,6 +5,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { ThemeProvider } from "@/components/theme-provider";
 import Navbar from "@/components/Navbar";
 import { ToastContainer} from 'react-toastify';
+import { ProductContextProvider } from "@/context/Product.Context";
   
 
 const geistSans = localFont({
@@ -37,6 +38,7 @@ export default function RootLayout({
       
       <html lang="en">
         <body> 
+          <ProductContextProvider>
           <ThemeProvider
           attribute="class"
           defaultTheme="system"
@@ -48,6 +50,7 @@ export default function RootLayout({
             <ToastContainer />
           </main>
           </ThemeProvider>
+          </ProductContextProvider>
         </body>
       </html>
     

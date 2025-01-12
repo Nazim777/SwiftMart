@@ -26,8 +26,12 @@ import Pagination from "@/components/Pagination";
 import PaginationSkeletonLoader from "@/components/PaginationSkeletonLoader";
 import Search from "@/components/Search";
 import SortCategory from "@/components/SortComponet";
+import { useAdminGuard } from "@/custom-hooks/UseAdminGuard";
 
 const AdminCategoriesPage = () => {
+  
+
+
   const [categories, setCategories] = useState<category[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [categoryName, setCategoryName] = useState("");
@@ -161,6 +165,11 @@ const handleCancelDialog = ()=>{
   const handleSearchChanges = (text:string)=>{
     setSearchTerm(text)
   }
+
+
+  // admin guard(admin accessible only)
+  const {} = useAdminGuard()
+   
 
 
   return (

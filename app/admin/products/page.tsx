@@ -21,8 +21,11 @@ import PaginationSkeletonLoader from "@/components/PaginationSkeletonLoader";
 import Search from "@/components/Search";
 import ProductFilters from "@/components/ProductFilters";
 import SortProduct from "@/components/SortComponet";
+import { useAdminGuard } from "@/custom-hooks/UseAdminGuard";
+
 
 const ProductsPage = () => {
+
   // Existing state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [productToEdit, setProductToEdit] = useState<ProductType | null>(null);
@@ -221,6 +224,8 @@ const ProductsPage = () => {
 
 
 
+// admin guard(admin accessible only)
+const {} = useAdminGuard()
 
 
 
