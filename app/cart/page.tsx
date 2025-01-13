@@ -114,14 +114,6 @@ const CartPage = () => {
 
 
 
-
-
-
-
-
-
-
-
   // Conditional rendering based on the loading state
   if (loading) {
      return <CartPageSkeleton />;
@@ -129,6 +121,47 @@ const CartPage = () => {
 
 
 
+  // handle checkout
+
+
+    const handleCheckout = async () => {
+
+      const items = cartItem.map(item=>({
+        productId:item.productId,
+        quantity:item.quantity
+      }))
+      const user = await getLoggedInUser()
+      
+      
+      try {
+        setLoading(true);
+
+        
+        const response = await fetch('/api/create-checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            items,
+            userId:user?.id
+          })
+        });
+  
+        if (!response.ok) {
+          throw new Error('Checkout failed');
+        }
+  
+        const { checkoutUrl } = await response.json();
+        window.location.href = checkoutUrl;
+      } catch (error) {
+        console.error('Checkout error:', error);
+        // alert('Error processing checkout. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+
+  
 
 
   return (
@@ -224,7 +257,7 @@ const CartPage = () => {
             <CardFooter>
               <button
                 className="w-full bg-black text-white py-2 px-4 rounded hover:bg-gray-800 transition"
-                onClick={() => alert("Proceed to checkout")}
+                onClick={handleCheckout}
               >
                 Proceed to Checkout
               </button>
