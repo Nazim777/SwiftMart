@@ -30,8 +30,13 @@ export async function POST(req:NextRequest){
                 await handlePaymentFailure(session.id)
                 break;
             }
+            case 'checkout.session.async_payment_failed':{
+              const session = event.data.object as Stripe.Checkout.Session;
+              await handlePaymentFailure(session.id)
+              break;
+            }
         }
-        NextResponse.json({received:true})
+      return  NextResponse.json({received:true})
         
       } catch (error) {
         console.error('Webhook error:', error);

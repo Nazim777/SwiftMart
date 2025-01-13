@@ -186,7 +186,13 @@ export const handlePaymentSuccess = async (sessionId: string) => {
 
 export const handlePaymentFailure = async(sessionId:string)=>{
     const session= await stripe.checkout.sessions.retrieve(sessionId)
+    
     await prisma.$transaction(async(tx)=>{
+      // validating session data 
+      if (!session.metadata?.userId) {
+        throw new Error("User ID is missing in session metadata.");
+      }
+
         await tx.payment.update({
             where:{stripePaymentId:session.id},
             data:{status:PaymentStatus.FAILED}
@@ -219,6 +225,30 @@ export const handlePaymentFailure = async(sessionId:string)=>{
                 status:Status.CANCELED
             }
         })
+
+
+
+        // find cart by userId
+        let cart = await tx.cart.findUnique({
+          where: { userId: session.metadata?.userId },
+        });
+        
+        // If the cart doesn't exist, create it
+        if (!cart) {
+          cart = await tx.cart.create({
+            data: { userId:session?.metadata?.userId },
+          });
+        }
+    
+        // Add the order items back to the cart
+        await tx.cartItem.createMany({
+          data: order.orderItems.map((item) => ({
+            cartId: cart.id,
+            productId: item.productId,
+            quantity: item.quantity,
+          })),
+          skipDuplicates: true, // Avoid duplicates if applicable
+        });
 
     })
     return session
