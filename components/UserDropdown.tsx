@@ -8,13 +8,25 @@ import { Button } from '@/components/ui/button'; // Assuming you have this Butto
 import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { SignOutButton } from '@clerk/nextjs';
-import { useState } from 'react';
-import { useAdminGuard } from "@/custom-hooks/UseAdminGuard";
+import { useEffect, useState } from 'react';
+import { getLoggedInUser } from "@/actions/action.user";
+import { User } from "./AvatarDisplay";
 export default function UserDropdown() {
   const { user } = useUser();  // From Clerk
   const [isOpen, setIsOpen] = useState(false);  // Dropdown open state
   const router = useRouter();
-  const  {loggedInUser} = useAdminGuard()
+ const [loggedInUser,setLoggeInUser] = useState<undefined | null | User>()
+ const fetchLoggedInUser = async ()=>{
+  try {
+    const response = await getLoggedInUser()
+    setLoggeInUser(response)
+  } catch (error) {
+    
+  }
+ }
+ useEffect(()=>{
+  fetchLoggedInUser()
+ },[])
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>

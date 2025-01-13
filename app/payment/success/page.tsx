@@ -1,23 +1,17 @@
-'use client'
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { getLoggedInUser } from '@/actions/action.user';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 
-export default function PaymentSuccess() {
-  const router = useRouter();
-  // const { session_id } = router.query;
-  const [orderDetails, setOrderDetails] = useState(null);
 
-  // useEffect(() => {
-  //   if (session_id) {
-  //     // Verify the session and get order details
-  //     fetch(`/api/verify-payment?session_id=${session_id}`)
-  //       .then(res => res.json())
-  //       .then(data => setOrderDetails(data))
-  //       .catch(error => console.error('Error:', error));
-  //   }
-  // }, [session_id]);
+export  default  async function PaymentSuccess() {
+  
+  const user = await getLoggedInUser()
+
+  if(!user){
+    redirect('/')
+  }
+  
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -44,16 +38,6 @@ export default function PaymentSuccess() {
           <p className="mt-2 text-sm text-gray-600">
             Thank you for your purchase. Your order has been confirmed.
           </p>
-          {orderDetails && (
-            <div className="mt-4 text-left">
-              <p className="text-sm text-gray-600">
-                {/* Order ID: {orderDetails?.orderId} */}
-              </p>
-              <p className="text-sm text-gray-600">
-                {/* Total Amount: ${orderDetails?.amount} */}
-              </p>
-            </div>
-          )}
           <div className="mt-6">
             <Link
               href="/orders"
@@ -67,3 +51,7 @@ export default function PaymentSuccess() {
     </div>
   );
 }
+
+
+
+
