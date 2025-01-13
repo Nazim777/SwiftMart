@@ -1,6 +1,9 @@
+'use server'
 import { stripe } from "@/utils/stripe";
 import { prisma } from "@/lib/prisma";
 import { PaymentStatus, Prisma, Status } from "@prisma/client";
+import { isAdmin } from "./action.user";
+import { revalidatePath } from "next/cache";
 
 
 
@@ -256,7 +259,7 @@ export const handlePaymentFailure = async(sessionId:string)=>{
 
 
 
-export const getAllOrders  = async(userId:string
+export const getAllOrdersForUser  = async(userId:string
 )=>{
   try {
     const response = await prisma.user.findUniqueOrThrow({
@@ -287,5 +290,84 @@ export const getAllOrders  = async(userId:string
     console.log('error',error)
     throw new Error('Error getting orders....')
     
+  }
+}
+
+
+
+
+
+export async function getOrders() {
+  try {
+    const admin = await isAdmin();
+        if (!admin) {
+          throw new Error("Unauthorized");
+        }
+
+    return await prisma.order.findMany({
+      include: {
+        user: {
+          select: {
+            email: true,
+            name: true,
+          },
+        },
+        orderItems: {
+          include: {
+            product: true,
+          },
+        },
+        payment: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching orders:', error);
+    throw new Error('Failed to fetch orders');
+  }
+}
+
+export const  updateOrderStatus= async (orderId: string, status: Status) =>{
+
+  console.log('orderId',orderId,'status',status)
+  try {
+    const admin = await isAdmin();
+    if (!admin) {
+      throw new Error("Unauthorized");
+    }
+   
+
+   const response =  await prisma.order.update({
+      where: { id: orderId },
+      data: { status },
+    });
+
+     revalidatePath('/admin/orders');
+    return { success: true,data:response };
+  } catch (error) {
+    console.error('Error updating order:', error);
+    throw new Error('Failed to update order');
+  }
+}
+
+export async function cancelOrder(orderId: string) {
+  try {
+    const admin = await isAdmin();
+    if (!admin) {
+      throw new Error("Unauthorized");
+    }
+
+    await prisma.order.update({
+      where: { id: orderId },
+      data: { status: 'CANCELED' },
+    });
+
+    revalidatePath('/admin/orders');
+    return { success: true };
+  } catch (error) {
+    console.error('Error canceling order:', error);
+    throw new Error('Failed to cancel order');
   }
 }

@@ -210,3 +210,13 @@ export const getProduct = async (productId: string) => {
     throw error
   }
 };
+
+// export const getProductForFeature = async()=>{
+//   try {
+    
+//     const response = await prisma.product.findMany({take:4})
+//     return {data:response}
+//   } catch (error) {
+    
+//   }
+// }

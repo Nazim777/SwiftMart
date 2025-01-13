@@ -1,6 +1,6 @@
 
 import { getLoggedInUser } from "@/actions/action.user";
-import { getAllOrders } from "@/actions/order.action";
+import {  getAllOrdersForUser } from "@/actions/order.action";
 import { OrderHistoryPage } from "@/components/OrderHistoryPage";
 import { redirect } from "next/navigation";
 
@@ -13,7 +13,7 @@ export default async function OrdersPage() {
   }
 
  
-const { data: orders } = await getAllOrders(user.id);
+const { data: orders } = await getAllOrdersForUser(user.id);
  
 
   return <OrderHistoryPage orders={orders} />;
