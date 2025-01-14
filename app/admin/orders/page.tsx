@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { redirect } from 'next/navigation';
 import { getLoggedInUser } from '@/actions/action.user';
 import { getOrders } from '@/actions/order.action';

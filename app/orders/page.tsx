@@ -1,4 +1,5 @@
 
+export const dynamic = 'force-dynamic';
 import { getLoggedInUser } from "@/actions/action.user";
 import {  getAllOrdersForUser } from "@/actions/order.action";
 import { OrderHistoryPage } from "@/components/OrderHistoryPage";

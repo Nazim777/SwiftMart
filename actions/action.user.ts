@@ -2,6 +2,7 @@
 import { auth, currentUser } from '@clerk/nextjs/server'
 import {prisma} from '../lib/prisma'
 import { revalidatePath } from 'next/cache'
+import { Role } from '@prisma/client';
 
 
 export const syncUser = async()=>{
@@ -96,3 +97,73 @@ export const isAdmin = async()=>{
     const user = await getLoggedInUser()
     return user?.role==='ADMIN'
 }
+
+
+
+
+
+
+
+
+export async function getUsers() {
+  try {
+    const admin = await isAdmin();
+    if (!admin) {
+      throw new Error("Unauthorized");
+    }
+
+    return await prisma.user.findMany({
+      include: {
+        orders: {
+          select: {
+            id: true,
+            status: true,
+            totalPrice: true,
+          }
+        },
+        payments: {
+          select: {
+            id: true,
+            amount: true,
+            status: true,
+          }
+        },
+        _count: {
+          select: {
+            orders: true,
+            payments: true,
+          }
+        }
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    throw new Error('Failed to fetch users');
+  }
+}
+
+
+
+export async function updateUserRole(userId: string, role: Role) {
+    try {
+        const admin = await isAdmin();
+        if (!admin) {
+          throw new Error("Unauthorized");
+        }
+  
+      await prisma.user.update({
+        where: { id: userId },
+        data: { role },
+      });
+  
+      revalidatePath('/admin/users');
+      return { success: true };
+    } catch (error) {
+      console.error('Error updating user role:', error);
+      throw new Error('Failed to update user role');
+    }
+  }
+  

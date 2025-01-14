@@ -21,6 +21,7 @@ export default function UserDropdown() {
     const response = await getLoggedInUser()
     setLoggeInUser(response)
   } catch (error) {
+    console.log('error',error)
     
   }
  }

@@ -151,7 +151,7 @@ const CartPage = () => {
         }
   
         const { checkoutUrl } = await response.json();
-        window.location.href = checkoutUrl;
+         window.location.href = checkoutUrl;
       } catch (error) {
         console.error('Checkout error:', error);
         // alert('Error processing checkout. Please try again.');

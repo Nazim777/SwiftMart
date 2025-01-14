@@ -4,6 +4,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css"; // Import Swiper's default styles
 import { ProductType } from "@/types/product";
 import Link from "next/link";
+import Image from "next/image";
 
 type productsProps ={
     products:ProductType[] | []
@@ -36,10 +37,12 @@ export default function ProductCarousel({products}:productsProps) {
           {products &&products?.map((product) => (
             <SwiperSlide key={product.name}>
               <Card className="bg-white shadow-lg rounded-lg overflow-hidden">
-                <img
+                <Image
                   src={product.url}
                   alt={product.name}
                   className="w-full h-64 object-cover mb-4"
+                  width={300}
+                  height={200}
                 />
                 <h3 className="text-xl font-semibold mb-2">{product.name}</h3>
                 <p className="text-lg text-indigo-600">${product.price}</p>

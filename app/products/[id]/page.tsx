@@ -1,7 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { FC, useEffect } from "react";
-import Link from "next/link";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { useState } from "react";

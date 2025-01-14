@@ -78,7 +78,7 @@ export default function ProductFilters({
                     type="radio"
                     name="stockStatus"
                     checked={filters?.stockStatus === status}
-                    onChange={() => onStockStatusChange(status as any)}
+                    onChange={() => onStockStatusChange(status as 'all'| 'inStock' | 'outOfStock')}
                     className="text-blue-600"
                   />
                   <span className="capitalize">

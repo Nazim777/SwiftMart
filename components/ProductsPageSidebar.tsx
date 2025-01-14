@@ -23,7 +23,7 @@ type sidebarProps = {
   className?: string;
 }
 
-const ProductPageSidebar = ({value,onSearchChange,placeholder,onSortChange,filters,categories,onPriceChange,onStockStatusChange,onClearFilters,onCategoryChange,className}:sidebarProps) => {
+const ProductPageSidebar = ({value,onSearchChange,placeholder,onSortChange,filters,categories,onPriceChange,onStockStatusChange,onClearFilters,onCategoryChange}:sidebarProps) => {
   return (
     <aside className="w-80 h-screen bg-background p-4 shadow-lg">
         <Search placeholder={placeholder} value={value} onSearchChange={onSearchChange}/>

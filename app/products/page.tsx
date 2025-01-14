@@ -8,7 +8,6 @@ import { getAllCategories } from "@/actions/action.category";
 import Pagination from "@/components/Pagination";
 import ProductsCard from "@/components/ProductsCard";
 import ProductCardSkeleton from "@/components/ProductCardSkeleton";
-import SidebarSkeleton from "@/components/SidebarSkeleton";
 import PaginationSkeletonLoader from "@/components/PaginationSkeletonLoader";
 import { ProductContext } from "@/context/Product.Context";
 import { getLoggedInUser } from "@/actions/action.user";
@@ -142,9 +141,6 @@ const ProductsPage = () => {
   return (
     <div className="flex mt-14">
       <aside className="w-80 bg-background h-full fixed   p-4 z-10 overflow-y-auto scrollbar-hidden">
-        {/* {loading ? (
-          <SidebarSkeleton />
-        ) : ( */}
           <Sidebar
             placeholder="Search Products..."
             value={searchTerm}
@@ -157,7 +153,6 @@ const ProductsPage = () => {
             onStockStatusChange={handleStockStatusChange}
             onClearFilters={clearFilters}
           />
-        {/* )} */}
       </aside>
       <main className="flex-1 p-4  flex flex-col ml-80">
         <div className="container mx-auto px-4 py-8">

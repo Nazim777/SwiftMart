@@ -18,7 +18,6 @@ export const getAllProducts = async (
   } = {},
   sortOrder: "asc" | "desc" = "asc"
 ) => {
-  console.log('sortOrder',sortOrder)
   try {
     
 

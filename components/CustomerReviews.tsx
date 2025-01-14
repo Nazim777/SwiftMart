@@ -12,7 +12,7 @@ export default function CustomerReviews() {
           <div className="flex justify-center space-x-8">
             {reviews.map((review, index) => (
               <div key={index} className="bg-white shadow-lg p-6 rounded-lg max-w-sm">
-                <p className="text-lg text-gray-700 mb-4">"{review.text}"</p>
+                <p className="text-lg text-gray-700 mb-4">{review.text}</p>
                 <div className="flex items-center justify-center">
                   {[...Array(review.rating)].map((_, i) => (
                     <svg

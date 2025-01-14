@@ -1,19 +1,17 @@
-'use client'
-import { useAdminGuard } from '@/custom-hooks/UseAdminGuard'
-import React from 'react'
+export const dynamic = 'force-dynamic';
+import { redirect } from 'next/navigation';
+import { getUsers } from '@/actions/action.user';
+import AdminUsersPage from '@/components/AdminUsersPage';
+import { getLoggedInUser } from '@/actions/action.user';
 
-const page = () => {
-  // admin guard(admin accessible only)
-    const {} = useAdminGuard()
-      
+export default async function AdminUsersRoute() {
+  const user = await getLoggedInUser();
+  
+  if (!user || user.role !== 'ADMIN') {
+    redirect('/');
+  }
 
+  const users = await getUsers();
 
-  return (
-    <div>
-        <h3>Users page</h3>
-      
-    </div>
-  )
+  return <AdminUsersPage initialUsers={users} />;
 }
-
-export default page
