@@ -1,14 +1,9 @@
-'use client'
+"use client";
 
-import React from 'react';
-import { format } from 'date-fns';
-import { toast } from 'react-toastify';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import React from "react";
+import { format } from "date-fns";
+import { toast } from "react-toastify";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -16,38 +11,38 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { 
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
-import { Search, Download, Filter } from 'lucide-react';
-import { updateUserRole } from '@/actions/action.user';
-import { Role } from '@prisma/client';
+} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Search, Download, Filter } from "lucide-react";
+import { updateUserRole } from "@/actions/action.user";
+import { Role } from "@prisma/client";
 
 interface Order {
   id: string;
-  status: 'PENDING' | 'COMPLETED' | 'CANCELED';
+  status: "PENDING" | "COMPLETED" | "CANCELED";
   totalPrice: number;
 }
 
 interface Payment {
   id: string;
   amount: number;
-  status: 'PENDING' | 'SUCCESS' | 'FAILED';
+  status: "PENDING" | "SUCCESS" | "FAILED";
 }
 
 interface User {
@@ -62,7 +57,7 @@ interface User {
   _count: {
     orders: number;
     payments: number;
-  }
+  };
 }
 
 interface AdminUsersPageProps {
@@ -71,8 +66,8 @@ interface AdminUsersPageProps {
 
 const AdminUsersPage: React.FC<AdminUsersPageProps> = ({ initialUsers }) => {
   const [users, setUsers] = React.useState<User[]>(initialUsers);
-  const [searchTerm, setSearchTerm] = React.useState('');
-  const [roleFilter, setRoleFilter] = React.useState<'ALL' | Role>('ALL');
+  const [searchTerm, setSearchTerm] = React.useState("");
+  const [roleFilter, setRoleFilter] = React.useState<"ALL" | Role>("ALL");
   const [selectedUser, setSelectedUser] = React.useState<User | null>(null);
   const [isUpdating, setIsUpdating] = React.useState(false);
 
@@ -80,46 +75,62 @@ const AdminUsersPage: React.FC<AdminUsersPageProps> = ({ initialUsers }) => {
     try {
       setIsUpdating(true);
       await updateUserRole(userId, newRole);
-      toast.success('User role updated successfully');
-      
-      setUsers(users.map(user => 
-        user.id === userId ? { ...user, role: newRole } : user
-      ));
+      toast.success("User role updated successfully");
+
+      setUsers(
+        users.map((user) =>
+          user.id === userId ? { ...user, role: newRole } : user
+        )
+      );
     } catch (error) {
-      console.log('error',error)
-      toast.error('Failed to update user role');
+      console.log("error", error);
+      toast.error("Failed to update user role");
     } finally {
       setIsUpdating(false);
     }
   };
 
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = 
+  const filteredUsers = users.filter((user) => {
+    const matchesSearch =
       user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = roleFilter === 'ALL' || user.role === roleFilter;
+    const matchesRole = roleFilter === "ALL" || user.role === roleFilter;
     return matchesSearch && matchesRole;
   });
 
   const exportUsers = () => {
     const csv = [
-      ['User ID', 'Name', 'Email', 'Role', 'Join Date', 'Orders', 'Total Spent'],
-      ...filteredUsers.map(user => [
+      [
+        "User ID",
+        "Name",
+        "Email",
+        "Role",
+        "Join Date",
+        "Orders",
+        "Total Spent",
+      ],
+      ...filteredUsers.map((user) => [
         user.id,
         user.name,
         user.email,
         user.role,
-        format(new Date(user.createdAt), 'yyyy-MM-dd'),
+        format(new Date(user.createdAt), "yyyy-MM-dd"),
         user._count.orders,
-        user.payments.reduce((sum, payment) => sum + (payment.status === 'SUCCESS' ? payment.amount : 0), 0)
-      ])
-    ].map(row => row.join(',')).join('\n');
+        user.payments.reduce(
+          (sum, payment) =>
+            sum + (payment.status === "SUCCESS" ? payment.amount : 0),
+          0
+        ),
+      ]),
+    ]
+      .map((row) => row.join(","))
+      .join("\n");
 
-    const blob = new Blob([csv], { type: 'text/csv' });
+    const blob = new Blob([csv], { type: "text/csv" });
     const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = `users-${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    a.download = `users-${format(new Date(), "yyyy-MM-dd")}.csv`;
     a.click();
   };
 
@@ -144,9 +155,9 @@ const AdminUsersPage: React.FC<AdminUsersPageProps> = ({ initialUsers }) => {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <Select 
-              value={roleFilter} 
-              onValueChange={(value: 'ALL' | Role) => setRoleFilter(value)}
+            <Select
+              value={roleFilter}
+              onValueChange={(value: "ALL" | Role) => setRoleFilter(value)}
             >
               <SelectTrigger className="w-[180px]">
                 <Filter className="h-4 w-4 mr-2" />
@@ -181,7 +192,9 @@ const AdminUsersPage: React.FC<AdminUsersPageProps> = ({ initialUsers }) => {
                     <TableCell>
                       <Select
                         defaultValue={user.role}
-                        onValueChange={(value: Role) => handleRoleChange(user.id, value)}
+                        onValueChange={(value: Role) =>
+                          handleRoleChange(user.id, value)
+                        }
                         disabled={isUpdating}
                       >
                         <SelectTrigger className="w-[100px]">
@@ -193,13 +206,20 @@ const AdminUsersPage: React.FC<AdminUsersPageProps> = ({ initialUsers }) => {
                         </SelectContent>
                       </Select>
                     </TableCell>
-                    <TableCell>{format(new Date(user.createdAt), 'MMM d, yyyy')}</TableCell>
+                    <TableCell>
+                      {format(new Date(user.createdAt), "MMM d, yyyy")}
+                    </TableCell>
                     <TableCell>{user._count.orders}</TableCell>
                     <TableCell>
-                      ${user.payments
-                        .reduce((sum, payment) => 
-                          sum + (payment.status === 'SUCCESS' ? payment.amount : 0), 0
-                        ).toFixed(2)}
+                      $
+                      {user.payments
+                        .reduce(
+                          (sum, payment) =>
+                            sum +
+                            (payment.status === "SUCCESS" ? payment.amount : 0),
+                          0
+                        )
+                        .toFixed(2)}
                     </TableCell>
                     <TableCell>
                       <Dialog>
@@ -220,25 +240,50 @@ const AdminUsersPage: React.FC<AdminUsersPageProps> = ({ initialUsers }) => {
                             <div className="space-y-4">
                               <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                  <h3 className="font-semibold">User Information</h3>
+                                  <h3 className="font-semibold">
+                                    User Information
+                                  </h3>
                                   <p>Name: {selectedUser.name}</p>
                                   <p>Email: {selectedUser.email}</p>
                                   <p>Role: {selectedUser.role}</p>
-                                  <p>Join Date: {format(new Date(selectedUser.createdAt), 'PPP')}</p>
+                                  <p>
+                                    Join Date:{" "}
+                                    {format(
+                                      new Date(selectedUser.createdAt),
+                                      "PPP"
+                                    )}
+                                  </p>
                                 </div>
                                 <div>
-                                  <h3 className="font-semibold">Activity Summary</h3>
-                                  <p>Total Orders: {selectedUser._count.orders}</p>
-                                  <p>Total Payments: {selectedUser._count.payments}</p>
-                                  <p>Total Spent: ${selectedUser.payments
-                                    .reduce((sum, payment) => 
-                                      sum + (payment.status === 'SUCCESS' ? payment.amount : 0), 0
-                                    ).toFixed(2)}
+                                  <h3 className="font-semibold">
+                                    Activity Summary
+                                  </h3>
+                                  <p>
+                                    Total Orders: {selectedUser._count.orders}
+                                  </p>
+                                  <p>
+                                    Total Payments:{" "}
+                                    {selectedUser._count.payments}
+                                  </p>
+                                  <p>
+                                    Total Spent: $
+                                    {selectedUser.payments
+                                      .reduce(
+                                        (sum, payment) =>
+                                          sum +
+                                          (payment.status === "SUCCESS"
+                                            ? payment.amount
+                                            : 0),
+                                        0
+                                      )
+                                      .toFixed(2)}
                                   </p>
                                 </div>
                               </div>
                               <div>
-                                <h3 className="font-semibold mb-2">Recent Orders</h3>
+                                <h3 className="font-semibold mb-2">
+                                  Recent Orders
+                                </h3>
                                 <Table>
                                   <TableHeader>
                                     <TableRow>
@@ -248,23 +293,31 @@ const AdminUsersPage: React.FC<AdminUsersPageProps> = ({ initialUsers }) => {
                                     </TableRow>
                                   </TableHeader>
                                   <TableBody>
-                                    {selectedUser.orders.slice(0, 5).map((order) => (
-                                      <TableRow key={order.id}>
-                                        <TableCell>#{order.id.slice(-6)}</TableCell>
-                                        <TableCell>
-                                          <Badge 
-                                          variant={
-                                            order.status === 'COMPLETED' ? 'default' :     
-                                            order.status === 'CANCELED' ? 'destructive' :
-                                            'secondary' 
-                                          }
-                                          >
-                                            {order.status}
-                                          </Badge>
-                                        </TableCell>
-                                        <TableCell>${order.totalPrice.toFixed(2)}</TableCell>
-                                      </TableRow>
-                                    ))}
+                                    {selectedUser.orders
+                                      .slice(0, 5)
+                                      .map((order) => (
+                                        <TableRow key={order.id}>
+                                          <TableCell>
+                                            #{order.id.slice(-6)}
+                                          </TableCell>
+                                          <TableCell>
+                                            <Badge
+                                              variant={
+                                                order.status === "COMPLETED"
+                                                  ? "default"
+                                                  : order.status === "CANCELED"
+                                                  ? "destructive"
+                                                  : "secondary"
+                                              }
+                                            >
+                                              {order.status}
+                                            </Badge>
+                                          </TableCell>
+                                          <TableCell>
+                                            ${order.totalPrice.toFixed(2)}
+                                          </TableCell>
+                                        </TableRow>
+                                      ))}
                                   </TableBody>
                                 </Table>
                               </div>
