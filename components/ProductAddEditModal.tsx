@@ -149,7 +149,7 @@ console.log(isLoading?'loading':'not loading')
            
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={()=>setIsModalOpen(false)}>
+            <Button variant="outline" onClick={()=>setIsModalOpen(false)} type="button">
               Cancel
             </Button>
             <Button

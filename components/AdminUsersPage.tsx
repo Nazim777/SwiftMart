@@ -1,6 +1,5 @@
-"use client";
-
-import React from "react";
+'use client'
+import React, { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { toast } from "react-toastify";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,8 +29,11 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Search, Download, Filter } from "lucide-react";
-import { updateUserRole } from "@/actions/action.user";
+import { getUsers, updateUserRole } from "@/actions/action.user";
 import { Role } from "@prisma/client";
+import CustomError from "@/app/_components/CustomError";
+import TableSkeleton from "./TableSkeleton";
+import PaginationSkeletonLoader from "./PaginationSkeletonLoader";
 
 interface Order {
   id: string;
@@ -60,16 +62,42 @@ interface User {
   };
 }
 
-interface AdminUsersPageProps {
-  initialUsers: User[];
-}
 
-const AdminUsersPage: React.FC<AdminUsersPageProps> = ({ initialUsers }) => {
-  const [users, setUsers] = React.useState<User[]>(initialUsers);
+
+const AdminUsersPage = () => {
+
+  const [users, setUsers] = React.useState<User[]>([]);
   const [searchTerm, setSearchTerm] = React.useState("");
   const [roleFilter, setRoleFilter] = React.useState<"ALL" | Role>("ALL");
   const [selectedUser, setSelectedUser] = React.useState<User | null>(null);
   const [isUpdating, setIsUpdating] = React.useState(false);
+  const [laoding,setLoading] = useState(false);
+  const [error,setError] = useState<string | null>(null)
+
+  const fetchUsers = async()=>{
+    setLoading(true)
+    setError(null)
+    try {
+      const allUsers = await getUsers()
+      setUsers(allUsers)
+      
+    } catch (error) {
+      console.log('error',error);
+      setError('Failed to load users. Please try again leter!')
+      
+    }finally{
+      setLoading(false)
+    }
+  }
+
+  useEffect(()=>{
+fetchUsers()
+  },[])
+
+
+  if(error){
+    return <CustomError error={error}/>
+  }
 
   const handleRoleChange = async (userId: string, newRole: Role) => {
     try {
@@ -134,6 +162,11 @@ const AdminUsersPage: React.FC<AdminUsersPageProps> = ({ initialUsers }) => {
     a.click();
   };
 
+
+
+
+
+
   return (
     <div className="p-6 space-y-6">
       <Card>
@@ -170,7 +203,10 @@ const AdminUsersPage: React.FC<AdminUsersPageProps> = ({ initialUsers }) => {
               </SelectContent>
             </Select>
           </div>
-
+     {laoding?<>
+     <TableSkeleton />
+              <PaginationSkeletonLoader />
+     </>:
           <div className="rounded-md border">
             <Table>
               <TableHeader>
@@ -331,6 +367,7 @@ const AdminUsersPage: React.FC<AdminUsersPageProps> = ({ initialUsers }) => {
               </TableBody>
             </Table>
           </div>
+          }
         </CardContent>
       </Card>
     </div>

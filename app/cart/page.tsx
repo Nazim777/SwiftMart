@@ -1,7 +1,7 @@
 "use client";
 import React, { useContext, useEffect } from "react";
 import { useState } from "react";
-import { Trash2, MinusCircle, PlusCircle } from "lucide-react";
+import { Trash2, MinusCircle, PlusCircle, ArrowLeft } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -21,21 +21,24 @@ import { ProductContext } from "@/context/Product.Context";
 import { toast } from "react-toastify";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
+import CustomError from "../_components/CustomError";
 const CartPage = () => {
-  
-  const {user} = useUser()
-  const router = useRouter()
+  const { user } = useUser();
+  const router = useRouter();
 
-  if(!user){
-    router.push('/')
-  } 
- 
-  const {cartItems:cartItem,setCartItems:setCartItem} = useContext(ProductContext)
+  if (!user) {
+    router.push("/");
+  }
+
+  const { cartItems: cartItem, setCartItems: setCartItem } =
+    useContext(ProductContext);
   const [loading, setLoading] = useState(false);
   const [loadingItemId, setLoadingItemId] = useState<string | null>(null);
-  const [change,setChange] = useState<number | null | string>(null)
+  const [change, setChange] = useState<number | null | string>(null);
+  const [error,setError] =useState<string | null>(null)
   const fetchCart = async () => {
     setLoading(true);
+    setError(null)
     try {
       const user = await getLoggedInUser();
       if (user) {
@@ -46,6 +49,7 @@ const CartPage = () => {
       }
     } catch (error) {
       console.log("error", error);
+      setError('Failed to load cart. Pleae try again leter!')
     } finally {
       setLoading(false);
     }
@@ -59,8 +63,8 @@ const CartPage = () => {
     prevQuantity: number,
     delta: number
   ) => {
-    setLoadingItemId(id)
-    setChange(delta)
+    setLoadingItemId(id);
+    setChange(delta);
     const newQuantity = prevQuantity + delta;
     try {
       const response = await updateCartItemQuatity(id, newQuantity);
@@ -77,24 +81,29 @@ const CartPage = () => {
       }
     } catch (error) {
       console.log("error", error);
+
+      toast.error('Error updating quantity...',{theme:'clolored'})
     } finally {
-      setLoadingItemId(null)
+      setLoadingItemId(null);
     }
   };
 
   const removeItem = async (id: string) => {
-    setLoadingItemId(id)
-    setChange('delete')
+    setLoadingItemId(id);
+    setChange("delete");
     try {
       const response = await deleteCartItem(id);
       if (response.success) {
         setCartItem(cartItem?.filter((item) => item.id !== id));
-        toast.success('product removed from the cart....',{theme:'colored'})
+        toast.success("product removed from the cart....", {
+          theme: "colored",
+        });
       }
     } catch (error) {
       console.log("error", error);
+      toast.error('Error removing item. Please try again later',{theme:'colored'})
     } finally {
-      setLoadingItemId(null)
+      setLoadingItemId(null);
     }
   };
 
@@ -110,62 +119,60 @@ const CartPage = () => {
     }
   };
 
-
-
-
-
   // Conditional rendering based on the loading state
+
+if(error){
+  return <CustomError error = {error}/>
+}
+
   if (loading) {
-     return <CartPageSkeleton />;
+    return <CartPageSkeleton />;
   }
-
-
 
   // handle checkout
 
+  const handleCheckout = async () => {
+    if (cartItem.length < 1) return toast.error("Cart is empty!",{theme:'colored'});
+    const items = cartItem.map((item) => ({
+      productId: item.productId,
+      quantity: item.quantity,
+    }));
+    const user = await getLoggedInUser();
 
-    const handleCheckout = async () => {
+    try {
+      setLoading(true);
 
-      const items = cartItem.map(item=>({
-        productId:item.productId,
-        quantity:item.quantity
-      }))
-      const user = await getLoggedInUser()
-      
-      
-      try {
-        setLoading(true);
+      const response = await fetch("/api/create-checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items,
+          userId: user?.id,
+        }),
+      });
 
-        
-        const response = await fetch('/api/create-checkout', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            items,
-            userId:user?.id
-          })
-        });
-  
-        if (!response.ok) {
-          throw new Error('Checkout failed');
-        }
-  
-        const { checkoutUrl } = await response.json();
-         window.location.href = checkoutUrl;
-      } catch (error) {
-        console.error('Checkout error:', error);
-        // alert('Error processing checkout. Please try again.');
-      } finally {
-        setLoading(false);
+      if (!response.ok) {
+        toast.error("Checkout failed!");
+        throw new Error("Checkout failed");
       }
-    };
-  
 
-  
-
+      const { checkoutUrl } = await response.json();
+      window.location.href = checkoutUrl;
+    } catch (error) {
+      console.error("Checkout error:", error);
+      // alert('Error processing checkout. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="max-w-4xl mx-auto p-4 mt-14">
+      <div className="max-w-6xl mx-auto px-4 py-6">
+        <button onClick={() => router.back()} className="flex items-center text-sm text-gray-600 hover:text-black">
+          <ArrowLeft className="w-4 h-4 mr-2" /> Back
+        </button>
+      </div>
       <h1 className="text-3xl font-bold mb-6">Shopping Cart</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -200,7 +207,7 @@ const CartPage = () => {
                           onClick={() =>
                             updateQuantity(item.id, item.quantity, -1)
                           }
-                          isLoading={loadingItemId === item.id && change===-1}
+                          isLoading={loadingItemId === item.id && change === -1}
                           icon={<MinusCircle className="w-5 h-5" />}
                           disabled={item.quantity == 1}
                         ></ButtonLoader>
@@ -211,14 +218,16 @@ const CartPage = () => {
                           onClick={() =>
                             updateQuantity(item.id, item.quantity, 1)
                           }
-                          isLoading={loadingItemId === item.id && change===1}
+                          isLoading={loadingItemId === item.id && change === 1}
                           icon={<PlusCircle className="w-5 h-5" />}
                           disabled={item.quantity == item.product.stock}
                         ></ButtonLoader>
                         <ButtonLoader
                           key={item.id}
                           onClick={() => removeItem(item.id)}
-                          isLoading={loadingItemId === item.id && change==='delete'}
+                          isLoading={
+                            loadingItemId === item.id && change === "delete"
+                          }
                           icon={<Trash2 className="w-5 h-5" />}
                         ></ButtonLoader>
                       </div>
@@ -268,8 +277,5 @@ const CartPage = () => {
     </div>
   );
 };
-
-
- 
 
 export default CartPage;

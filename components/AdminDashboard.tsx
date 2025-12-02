@@ -1,14 +1,9 @@
-'use client'
+"use client";
 
-import React from 'react';
-import { format } from 'date-fns';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import React, { useEffect, useState } from "react";
+import { format } from "date-fns";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   LineChart,
   Line,
@@ -18,9 +13,20 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer
-} from 'recharts';
-import { ArrowUpCircle, ArrowDownCircle, DollarSign, Package, Users, ShoppingCart, LucideIcon } from 'lucide-react';
+  ResponsiveContainer,
+} from "recharts";
+import {
+  ArrowUpCircle,
+  ArrowDownCircle,
+  DollarSign,
+  Package,
+  Users,
+  ShoppingCart,
+  LucideIcon,
+} from "lucide-react";
+import { getDashboardStats } from "@/actions/action.analytics";
+import DashboardLoader from "./ui/DashboardLoader";
+import CustomError from "@/app/_components/CustomError";
 
 interface DashboardStats {
   users: {
@@ -61,26 +67,74 @@ interface DashboardStats {
   }[];
 }
 
-interface AdminDashboardProps {
-  initialStats: DashboardStats;
+
+const AdminDashboard = () => {
+
+  const [initialStats,setInitialStats] = useState<DashboardStats>()
+  const [loading,setLoading] = useState(false);
+  const [error,setError] = useState<string | null>(null)
+const fetchStats = async()=>{
+  setLoading(true);
+  setError(null)
+  try {
+    const allStats = await getDashboardStats();
+    setInitialStats(allStats)
+    
+  } catch (error) {
+    console.log('error',error);
+    setError('Failed to load dashboard stats. Please try again later!')
+    
+  }finally{
+    setLoading(false)
+  }
 }
 
-const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialStats }) => {
+
+useEffect(()=>{
+fetchStats()
+},[])
+
+if (error) {
+    return <CustomError error = {error}/>
+  }
+
+
+
+  if (!initialStats || loading) {
+    return <DashboardLoader loading='Loading Dashboard...'/>
+  }
+
+
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
     }).format(amount);
   };
 
-  const StatCard = ({ title, value, growth, icon: Icon, prefix = '' }:{title:string;value:number | string; growth:number, icon:LucideIcon,prefix?:string}) => (
+  const StatCard = ({
+    title,
+    value,
+    growth,
+    icon: Icon,
+    prefix = "",
+  }: {
+    title: string;
+    value: number | string;
+    growth: number;
+    icon: LucideIcon;
+    prefix?: string;
+  }) => (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
         <Icon className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{prefix}{value}</div>
+        <div className="text-2xl font-bold">
+          {prefix}
+          {value}
+        </div>
         <div className="flex items-center text-sm text-muted-foreground">
           {growth >= 0 ? (
             <ArrowUpCircle className="h-4 w-4 text-green-500 mr-1" />
@@ -134,19 +188,21 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialStats }) => {
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={initialStats.monthlyStats}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
-                    dataKey="createdAt" 
-                    tickFormatter={(date) => format(new Date(date), 'MMM')}
+                  <XAxis
+                    dataKey="createdAt"
+                    tickFormatter={(date) => format(new Date(date), "MMM")}
                   />
                   <YAxis />
-                  <Tooltip 
+                  <Tooltip
                     formatter={(value: number) => formatCurrency(value)}
-                    labelFormatter={(date) => format(new Date(date), 'MMMM yyyy')}
+                    labelFormatter={(date) =>
+                      format(new Date(date), "MMMM yyyy")
+                    }
                   />
-                  <Line 
-                    type="monotone" 
-                    dataKey="_sum.totalPrice" 
-                    stroke="#8884d8" 
+                  <Line
+                    type="monotone"
+                    dataKey="_sum.totalPrice"
+                    stroke="#8884d8"
                     name="Revenue"
                   />
                 </LineChart>
@@ -164,19 +220,17 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialStats }) => {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={initialStats.monthlyStats}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
+                  <XAxis
                     dataKey="createdAt"
-                    tickFormatter={(date) => format(new Date(date), 'MMM')}
+                    tickFormatter={(date) => format(new Date(date), "MMM")}
                   />
                   <YAxis />
-                  <Tooltip 
-                    labelFormatter={(date) => format(new Date(date), 'MMMM yyyy')}
+                  <Tooltip
+                    labelFormatter={(date) =>
+                      format(new Date(date), "MMMM yyyy")
+                    }
                   />
-                  <Bar 
-                    dataKey="_count" 
-                    fill="#8884d8" 
-                    name="Orders"
-                  />
+                  <Bar dataKey="_count" fill="#8884d8" name="Orders" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -193,7 +247,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialStats }) => {
           <CardContent>
             <div className="space-y-4">
               {initialStats.topProducts.map((product) => (
-                <div key={product.id} className="flex items-center justify-between">
+                <div
+                  key={product.id}
+                  className="flex items-center justify-between"
+                >
                   <div>
                     <p className="font-medium">{product.name}</p>
                     <p className="text-sm text-muted-foreground">
@@ -201,7 +258,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialStats }) => {
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-medium">{formatCurrency(product.price)}</p>
+                    <p className="font-medium">
+                      {formatCurrency(product.price)}
+                    </p>
                     <p className="text-sm text-muted-foreground">
                       {product.stock} in stock
                     </p>
@@ -219,7 +278,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialStats }) => {
           <CardContent>
             <div className="space-y-4">
               {initialStats.recentOrders.map((order) => (
-                <div key={order.id} className="flex items-center justify-between">
+                <div
+                  key={order.id}
+                  className="flex items-center justify-between"
+                >
                   <div>
                     <p className="font-medium">Order #{order.id.slice(-6)}</p>
                     <p className="text-sm text-muted-foreground">
@@ -227,12 +289,16 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ initialStats }) => {
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-medium">{formatCurrency(order.totalPrice)}</p>
-                    <Badge 
-                    variant={
-                        order.status === 'COMPLETED' ? 'default' :     
-                        order.status === 'CANCELED' ? 'destructive' :
-                        'secondary'                                    
+                    <p className="font-medium">
+                      {formatCurrency(order.totalPrice)}
+                    </p>
+                    <Badge
+                      variant={
+                        order.status === "COMPLETED"
+                          ? "default"
+                          : order.status === "CANCELED"
+                          ? "destructive"
+                          : "secondary"
                       }
                     >
                       {order.status}

@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import type { User } from "./AvatarDisplay";
 import { updateUser } from "@/actions/action.user";
+import { toast } from "react-toastify";
+import Spinner from "./Spinner";
 
 interface ProfileFormProps {
   user: User | null | undefined;
@@ -17,6 +19,8 @@ export default function ProfileForm({ user }: ProfileFormProps) {
     email: user?.email,
   });
 
+  const [loading,setLoading] = useState(false);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
@@ -25,9 +29,19 @@ export default function ProfileForm({ user }: ProfileFormProps) {
   const handleSubmit = async(e: React.FormEvent) => {
     e.preventDefault();
     console.log("Updated Profile:", form);
-    if(form.name && form.email){
+    setLoading(true)
+    try {
+      if(form.name && form.email){
       const response = await updateUser({name:form.name,email:form.email})
       console.log('response',response)
+      if(response?.updatedAt){
+        toast.success('User updated!',{theme:'colored'})
+      }
+    }
+    } catch (error) {
+      toast.error('Error updating user!',{theme:'colored'})
+    }finally{
+      setLoading(false)
     }
    
   };
@@ -49,6 +63,7 @@ export default function ProfileForm({ user }: ProfileFormProps) {
       <div>
         <Label htmlFor="email">Email</Label>
         <Input
+        disabled
           id="email"
           name="email"
           type="email"
@@ -59,8 +74,8 @@ export default function ProfileForm({ user }: ProfileFormProps) {
         />
       </div>
 
-      <Button type="submit" className="w-full">
-        Save Changes
+      <Button type="submit" className="w-full" disabled={loading}>
+       {loading?'Updating...':'Save Changes'}
       </Button>
     </form>
   );

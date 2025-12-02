@@ -180,26 +180,43 @@ export async function getDashboardStats() {
       }),
     ]);
 
+
     return {
       users: {
         total: totalUsers,
         newThisMonth: newUsersThisMonth,
         growth:
-          ((newUsersThisMonth - newUsersLastMonth) / newUsersLastMonth) * 100,
+          newUsersLastMonth > 0
+            ? ((newUsersThisMonth - newUsersLastMonth) / newUsersLastMonth) *
+              100
+            : newUsersThisMonth > 0
+            ? 100
+            : 0, // prevent NaN / Infinity
       },
       orders: {
         total: totalOrders,
         thisMonth: ordersThisMonth,
-        growth: ((ordersThisMonth - ordersLastMonth) / ordersLastMonth) * 100,
+        growth:
+          ordersLastMonth > 0
+            ? ((ordersThisMonth - ordersLastMonth) / ordersLastMonth) * 100
+            : ordersThisMonth > 0
+            ? 100
+            : 0,
       },
       revenue: {
         total: totalRevenue._sum.amount || 0,
         thisMonth: revenueThisMonth._sum.amount || 0,
         growth:
-          (((revenueThisMonth._sum.amount || 0) -
-            (revenueLastMonth._sum.amount || 0)) /
-            (revenueLastMonth._sum.amount || 1)) *
-          100,
+          (revenueLastMonth._sum.amount || 0) > 0
+            ? (((revenueThisMonth._sum.amount || 0) -
+                (revenueLastMonth._sum.amount || 0)) /
+                //@ts-ignore
+                revenueLastMonth?._sum.amount) *
+              100
+              //@ts-ignore
+            : revenueThisMonth?._sum.amount > 0
+            ? 100
+            : 0,
       },
       topProducts: productStats,
       recentOrders,
@@ -208,6 +225,6 @@ export async function getDashboardStats() {
     };
   } catch (error) {
     console.error("Error fetching dashboard stats:", error);
-    throw new Error("Failed to fetch dashboard stats");
+   throw error
   }
 }

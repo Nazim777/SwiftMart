@@ -4,7 +4,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
   } from "@/components/ui/dropdown-menu"
-import { Button } from '@/components/ui/button'; // Assuming you have this Button component
+import { Button } from '@/components/ui/button';
 import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { SignOutButton } from '@clerk/nextjs';
@@ -12,8 +12,8 @@ import { useEffect, useState } from 'react';
 import { getLoggedInUser } from "@/actions/action.user";
 import { User } from "./AvatarDisplay";
 export default function UserDropdown() {
-  const { user } = useUser();  // From Clerk
-  const [isOpen, setIsOpen] = useState(false);  // Dropdown open state
+  const { user } = useUser();
+  const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
  const [loggedInUser,setLoggeInUser] = useState<undefined | null | User>()
  const fetchLoggedInUser = async ()=>{
@@ -31,8 +31,8 @@ export default function UserDropdown() {
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="h-8 w-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 text-white flex items-center justify-center font-bold shadow-md">
-          {user?.firstName?.charAt(0)?.toUpperCase() || 'User'}
+        <Button variant="ghost" className="h-5 w-5 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 text-white flex items-center justify-center font-bold shadow-md">
+          {user?.firstName?.charAt(0)?.toUpperCase() || 'U'}
         </Button>
       </DropdownMenuTrigger>
       

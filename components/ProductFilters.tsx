@@ -2,6 +2,8 @@ import React from 'react';
 import { Slider } from "@/components/ui/slider";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import DashboardLoader from './ui/DashboardLoader';
+import CustomError from '@/app/_components/CustomError';
 
 type FilterProps = {
   filters: {
@@ -16,6 +18,8 @@ type FilterProps = {
   onStockStatusChange: (status: 'all' | 'inStock' | 'outOfStock') => void;
   onClearFilters: () => void;
   className?: string;
+  categoryError: string | null;
+  categoryLoader: boolean;
 };
 
 export default function ProductFilters({
@@ -25,7 +29,9 @@ export default function ProductFilters({
   onCategoryChange,
   onStockStatusChange,
   onClearFilters,
-  className = ""
+  className = "",
+  categoryError,
+  categoryLoader
 }: FilterProps) {
   return (
     <Card className={className}>
@@ -48,6 +54,7 @@ export default function ProductFilters({
           </div>
 
           {/* Categories Filter */}
+          {categoryLoader?<DashboardLoader loading='Category Loading...'/>:categoryError?<CustomError error = {categoryError}/>:
           <div className="space-y-4">
             <h3 className="font-medium">Categories</h3>
             <div className="flex flex-col gap-2">
@@ -67,6 +74,7 @@ export default function ProductFilters({
               ))}
             </div>
           </div>
+          }
 
           {/* Stock Status Filter */}
           <div className="space-y-4">

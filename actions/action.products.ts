@@ -2,9 +2,7 @@
 import { prisma } from "@/lib/prisma";
 import { isAdmin } from "./action.user";
 import { productTypeForCreateAndEdit } from "@/types/product";
-import { Prisma } from '@prisma/client';
-
-
+import { Prisma } from "@prisma/client";
 
 export const getAllProducts = async (
   page: number = 1,
@@ -14,25 +12,20 @@ export const getAllProducts = async (
     minPrice?: number;
     maxPrice?: number;
     categoryIds?: string[];
-    stockStatus?: 'inStock' | 'outOfStock' | 'all';
+    stockStatus?: "inStock" | "outOfStock" | "all";
   } = {},
   sortOrder: "asc" | "desc" = "asc"
 ) => {
   try {
-    
-
-   
     let whereConditions: any = {};
 
-    
     if (searchTerm) {
       whereConditions.name = {
         contains: searchTerm,
-        mode: Prisma.QueryMode.insensitive,
+        mode: Prisma?.QueryMode?.insensitive,
       };
     }
 
-    
     if (filters.minPrice !== 0 || filters.maxPrice !== 1500) {
       whereConditions.price = {
         ...(filters.minPrice !== 0 && { gte: filters.minPrice }),
@@ -40,40 +33,32 @@ export const getAllProducts = async (
       };
     }
 
-    
     if (filters.categoryIds && filters.categoryIds.length > 0) {
       whereConditions.categories = {
         some: {
           categoryId: {
-            in: filters.categoryIds
-          }
-        }
+            in: filters.categoryIds,
+          },
+        },
       };
     }
 
-   
-    if (filters.stockStatus && filters.stockStatus !== 'all') {
-      whereConditions.stock = filters.stockStatus === 'inStock' 
-        ? { gt: 0 }
-        : { equals: 0 };
+    if (filters.stockStatus && filters.stockStatus !== "all") {
+      whereConditions.stock =
+        filters.stockStatus === "inStock" ? { gt: 0 } : { equals: 0 };
     }
 
-
-
-    const totalProducts = await prisma.product.count({
+    const totalProducts = await prisma?.product?.count({
       where: whereConditions,
     });
 
-
     const totalPages = Math.ceil(totalProducts / limit);
-    
+
     // Adjust page number if it exceeds total pages
     const effectivePage = Math.min(page, Math.max(totalPages, 1));
     const effectiveSkip = (effectivePage - 1) * limit;
 
-
-
-    const response = await prisma.product.findMany({
+    const response = await prisma?.product?.findMany({
       where: whereConditions,
       skip: effectiveSkip,
       take: limit,
@@ -85,13 +70,9 @@ export const getAllProducts = async (
         },
       },
       orderBy: {
-        createdAt: sortOrder 
-      }
+        createdAt: sortOrder,
+      },
     });
-
-    
-
-
 
     return {
       products: response,
@@ -101,16 +82,13 @@ export const getAllProducts = async (
       appliedFilters: {
         searchTerm,
         ...filters,
-      }
+      },
     };
   } catch (error) {
     console.log("error", error);
     throw error;
   }
 };
-
-
-
 
 export const createProduct = async (
   productData: productTypeForCreateAndEdit
@@ -145,8 +123,8 @@ export const createProduct = async (
     });
     return { data: response, success: true };
   } catch (error) {
-    console.log('error',error)
-    throw error
+    console.log("error", error);
+    throw error;
   }
 };
 
@@ -178,7 +156,7 @@ export const updateProduct = async (
     return { data: response, success: true };
   } catch (error) {
     console.log("error", error);
-    throw error
+    throw error;
   }
 };
 
@@ -193,7 +171,7 @@ export const deleteProduct = async (productId: string) => {
     return { data: response, success: true };
   } catch (error) {
     console.log("error", error);
-    throw error
+    throw error;
   }
 };
 
@@ -203,19 +181,19 @@ export const getProduct = async (productId: string) => {
       where: { id: productId },
       include: { categories: { include: { category: true } } },
     });
-    return {data:response,success:true}
+    return { data: response, success: true };
   } catch (error) {
-    console.log('error',error)
-    throw error
+    console.log("error", error);
+    throw error;
   }
 };
 
 // export const getProductForFeature = async()=>{
 //   try {
-    
+
 //     const response = await prisma.product.findMany({take:4})
 //     return {data:response}
 //   } catch (error) {
-    
+
 //   }
 // }

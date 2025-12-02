@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { toast } from "react-toastify";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,7 +30,14 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Search, Download, Filter } from "lucide-react";
-import { updateOrderStatus,cancelOrder } from "@/actions/order.action";
+import {
+  updateOrderStatus,
+  cancelOrder,
+  getOrders,
+} from "@/actions/order.action";
+import TableSkeleton from "./TableSkeleton";
+import PaginationSkeletonLoader from "./PaginationSkeletonLoader";
+import CustomError from "@/app/_components/CustomError";
 
 // Type definitions based on your Prisma schema
 type PaymentStatus = "PENDING" | "SUCCESS" | "FAILED";
@@ -74,20 +81,37 @@ interface Order {
   payment?: Payment | undefined | null;
 }
 
-interface AdminOrdersPageProps {
-  initialOrders: Order[];
-}
 
-export const AdminOrdersPage: React.FC<AdminOrdersPageProps> = ({
-  initialOrders,
-}) => {
-  const [orders, setOrders] = useState<Order[]>(initialOrders);
+export const AdminOrdersPage = () => {
+  const [orders, setOrders] = useState<Order[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] =useState<"ALL" | OrderStatus>(
-    "ALL"
-  );
+  const [statusFilter, setStatusFilter] = useState<"ALL" | OrderStatus>("ALL");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [laoding, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const fetchOrders = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const allOrders = await getOrders();
+      setOrders(allOrders);
+    } catch (error) {
+      console.log("error", error);
+      setError("Error Fetching Orders");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
+
+  if(error){
+    return <CustomError error = {error}/>
+  }
 
   const formatCurrency = (amount: number): string => {
     return new Intl.NumberFormat("en-US", {
@@ -101,11 +125,11 @@ export const AdminOrdersPage: React.FC<AdminOrdersPageProps> = ({
     newStatus: OrderStatus
   ) => {
     try {
-      console.log('orderId',orderId,'status',newStatus)
+      console.log("orderId", orderId, "status", newStatus);
       setIsUpdating(true);
       const response = await updateOrderStatus(orderId, newStatus);
-      if(response.success){
-        console.log('success fully order updated')
+      if (response.success) {
+        console.log("success fully order updated");
       }
       toast.success("Order status updated successfully");
 
@@ -115,7 +139,7 @@ export const AdminOrdersPage: React.FC<AdminOrdersPageProps> = ({
         )
       );
     } catch (error) {
-      console.log('error',error)
+      console.log("error", error);
       toast.error("Failed to update order status");
     } finally {
       setIsUpdating(false);
@@ -134,7 +158,7 @@ export const AdminOrdersPage: React.FC<AdminOrdersPageProps> = ({
         )
       );
     } catch (error) {
-      console.log('error',error)
+      console.log("error", error);
       toast.error("Failed to cancel order");
     } finally {
       setIsUpdating(false);
@@ -224,148 +248,164 @@ export const AdminOrdersPage: React.FC<AdminOrdersPageProps> = ({
             </Select>
           </div>
 
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Order ID</TableHead>
-                  <TableHead>Customer</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Items</TableHead>
-                  <TableHead>Total</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Payment</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredOrders.map((order) => (
-                  <TableRow key={order.id}>
-                    <TableCell className="font-medium">
-                      #{order.id.slice(-6)}
-                    </TableCell>
-                    <TableCell>{order.user.email}</TableCell>
-                    <TableCell>
-                      {format(new Date(order.createdAt), "MMM d, yyyy")}
-                    </TableCell>
-                    <TableCell>{order.orderItems.length} items</TableCell>
-                    <TableCell>{formatCurrency(order.totalPrice)}</TableCell>
-                    <TableCell>
-                      <Select
-                        defaultValue={order.status}
-                        onValueChange={(value: OrderStatus) =>
-                          handleStatusChange(order.id, value)
-                        }
-                        disabled={isUpdating}
-                      >
-                        <SelectTrigger className="w-[130px]">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="PENDING">Pending</SelectItem>
-                          <SelectItem value="COMPLETED">Completed</SelectItem>
-                          <SelectItem value="CANCELED">Canceled</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                    <TableCell>
-                      <Badge>{order.payment?.status || "PENDING"}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setSelectedOrder(order)}
-                            >
-                              View Details
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-3xl">
-                            <DialogHeader>
-                              <DialogTitle>Order Details</DialogTitle>
-                            </DialogHeader>
-                            {selectedOrder && (
-                              <div className="space-y-4">
-                                <div className="grid grid-cols-2 gap-4">
-                                  <div>
-                                    <h3 className="font-semibold">
-                                      Customer Information
-                                    </h3>
-                                    <p>Email: {selectedOrder.user.email}</p>
-                                    <p>
-                                      Order Date:{" "}
-                                      {format(
-                                        new Date(selectedOrder.createdAt),
-                                        "PPP"
-                                      )}
-                                    </p>
-                                  </div>
-                                  <div>
-                                    <h3 className="font-semibold">
-                                      Order Summary
-                                    </h3>
-                                    <p>Status: {selectedOrder.status}</p>
-                                    <p>
-                                      Total:{" "}
-                                      {formatCurrency(selectedOrder.totalPrice)}
-                                    </p>
-                                  </div>
-                                </div>
-                                <div>
-                                  <h3 className="font-semibold mb-2">
-                                    Order Items
-                                  </h3>
-                                  <Table>
-                                    <TableHeader>
-                                      <TableRow>
-                                        <TableHead>Product</TableHead>
-                                        <TableHead>Quantity</TableHead>
-                                        <TableHead>Price</TableHead>
-                                        <TableHead>Total</TableHead>
-                                      </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                      {selectedOrder.orderItems.map((item) => (
-                                        <TableRow key={item.id}>
-                                          <TableCell>
-                                            {item.product.name}
-                                          </TableCell>
-                                          <TableCell>{item.quantity}</TableCell>
-                                          <TableCell>
-                                            {formatCurrency(item.product.price)}
-                                          </TableCell>
-                                          <TableCell>
-                                            {formatCurrency(
-                                              item.product.price * item.quantity
-                                            )}
-                                          </TableCell>
-                                        </TableRow>
-                                      ))}
-                                    </TableBody>
-                                  </Table>
-                                </div>
-                              </div>
-                            )}
-                          </DialogContent>
-                        </Dialog>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleCancelOrder(order.id)}
-                          disabled={order.status === "CANCELED" || isUpdating}
-                        >
-                          Cancel
-                        </Button>
-                      </div>
-                    </TableCell>
+          {laoding ? (
+            <>
+              <TableSkeleton />
+              <PaginationSkeletonLoader />
+            </>
+          ) : (
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Order ID</TableHead>
+                    <TableHead>Customer</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Items</TableHead>
+                    <TableHead>Total</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Payment</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                </TableHeader>
+                <TableBody>
+                  {filteredOrders.map((order) => (
+                    <TableRow key={order.id}>
+                      <TableCell className="font-medium">
+                        #{order.id.slice(-6)}
+                      </TableCell>
+                      <TableCell>{order.user.email}</TableCell>
+                      <TableCell>
+                        {format(new Date(order.createdAt), "MMM d, yyyy")}
+                      </TableCell>
+                      <TableCell>{order.orderItems.length} items</TableCell>
+                      <TableCell>{formatCurrency(order.totalPrice)}</TableCell>
+                      <TableCell>
+                        <Select
+                          defaultValue={order.status}
+                          onValueChange={(value: OrderStatus) =>
+                            handleStatusChange(order.id, value)
+                          }
+                          disabled={isUpdating}
+                        >
+                          <SelectTrigger className="w-[130px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="PENDING">Pending</SelectItem>
+                            <SelectItem value="COMPLETED">Completed</SelectItem>
+                            <SelectItem value="CANCELED">Canceled</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell>
+                        <Badge>{order.payment?.status || "PENDING"}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setSelectedOrder(order)}
+                              >
+                                View Details
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-3xl">
+                              <DialogHeader>
+                                <DialogTitle>Order Details</DialogTitle>
+                              </DialogHeader>
+                              {selectedOrder && (
+                                <div className="space-y-4">
+                                  <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                      <h3 className="font-semibold">
+                                        Customer Information
+                                      </h3>
+                                      <p>Email: {selectedOrder.user.email}</p>
+                                      <p>
+                                        Order Date:{" "}
+                                        {format(
+                                          new Date(selectedOrder.createdAt),
+                                          "PPP"
+                                        )}
+                                      </p>
+                                    </div>
+                                    <div>
+                                      <h3 className="font-semibold">
+                                        Order Summary
+                                      </h3>
+                                      <p>Status: {selectedOrder.status}</p>
+                                      <p>
+                                        Total:{" "}
+                                        {formatCurrency(
+                                          selectedOrder.totalPrice
+                                        )}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <h3 className="font-semibold mb-2">
+                                      Order Items
+                                    </h3>
+                                    <Table>
+                                      <TableHeader>
+                                        <TableRow>
+                                          <TableHead>Product</TableHead>
+                                          <TableHead>Quantity</TableHead>
+                                          <TableHead>Price</TableHead>
+                                          <TableHead>Total</TableHead>
+                                        </TableRow>
+                                      </TableHeader>
+                                      <TableBody>
+                                        {selectedOrder.orderItems.map(
+                                          (item) => (
+                                            <TableRow key={item.id}>
+                                              <TableCell>
+                                                {item.product.name}
+                                              </TableCell>
+                                              <TableCell>
+                                                {item.quantity}
+                                              </TableCell>
+                                              <TableCell>
+                                                {formatCurrency(
+                                                  item.product.price
+                                                )}
+                                              </TableCell>
+                                              <TableCell>
+                                                {formatCurrency(
+                                                  item.product.price *
+                                                    item.quantity
+                                                )}
+                                              </TableCell>
+                                            </TableRow>
+                                          )
+                                        )}
+                                      </TableBody>
+                                    </Table>
+                                  </div>
+                                </div>
+                              )}
+                            </DialogContent>
+                          </Dialog>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleCancelOrder(order.id)}
+                            disabled={order.status === "CANCELED" || isUpdating}
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

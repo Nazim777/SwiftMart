@@ -85,3 +85,12 @@ body {
   -ms-overflow-style: none; 
   scrollbar-width: none; 
 } */
+
+@keyframes fly-cart {
+  0% { transform: scale(1) translate(0,0); opacity: 1; }
+  100% { transform: scale(0.1) translate(400px,-300px); opacity: 0; }
+}
+
+.animate-fly-cart {
+  animation: fly-cart 0.9s ease forwards;
+}

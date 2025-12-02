@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ProductType } from '@/types/product';
 
@@ -8,9 +7,10 @@ interface ProductTableProps {
   products: ProductType[] | undefined;
   onEdit: (product: ProductType) => void;
   onDelete:(id:string,name:string)=>void
+  onProductShow:(product:ProductType) =>void
 }
 
-export default function ProductTable({ products, onEdit,onDelete }: ProductTableProps) {
+export default function ProductTable({ products, onEdit,onDelete,onProductShow }: ProductTableProps) {
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full bg-white border border-gray-200">
@@ -35,11 +35,9 @@ export default function ProductTable({ products, onEdit,onDelete }: ProductTable
               </td>
               <td className="px-6 py-4">{new Date(product.createdAt).toLocaleDateString()}</td>
               <td className="px-6 py-4 flex justify-center gap-3">
-                <Link href={`/admin/products/${product.id}`}>
-                  <Button size="sm" variant="outline">
+                  <Button size="sm" variant="outline" onClick={()=>onProductShow(product)}>
                     View
                   </Button>
-                </Link>
                 <Button size="sm" variant="outline" onClick={() => onEdit(product)}>
                   Edit
                 </Button>

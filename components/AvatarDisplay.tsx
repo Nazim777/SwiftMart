@@ -1,6 +1,7 @@
 "use client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useUser } from "@clerk/nextjs";
 
 
 export type User = {
@@ -18,10 +19,11 @@ interface AvatarDisplayProps {
 }
 
 export default function AvatarDisplay({ user }: AvatarDisplayProps) {
+  const {user:authUser} =useUser()
   return (
     <div className="text-center space-y-4">
       <Avatar className="w-32 h-32 mx-auto">
-        <AvatarImage src={""} alt="Avatar" />
+        <AvatarImage src={authUser?.imageUrl} alt="Avatar" />
         <AvatarFallback>{user?.name.charAt(0)}</AvatarFallback>
       </Avatar>
       <p className="text-lg font-medium">{user?.name || "User"}</p>
